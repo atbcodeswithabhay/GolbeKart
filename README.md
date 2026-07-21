@@ -2,6 +2,8 @@
 
 GolbeKart is a modern, high-performance, full-stack E-commerce web application. It features a highly interactive and beautifully animated client interface built with React, Vite, Framer Motion, and GSAP, backed by a robust and secure Express server using Prisma ORM with an SQLite database.
 
+**🔗 Live Website URL:** [https://client-seven-zeta-36.vercel.app](https://client-seven-zeta-36.vercel.app)
+
 ---
 
 ## 🚀 Tech Stack
