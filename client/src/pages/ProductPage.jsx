@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Star, Truck, Shield, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { cartActions } from '../redux/cartSlice';
+import { MOCK_PRODUCTS } from '../utils/mockData';
 
 export default function ProductPage() {
   const { slug } = useParams();
@@ -20,7 +21,9 @@ export default function ProductPage() {
         const res = await axios.get(`http://localhost:5001/api/products/${slug}`);
         setProduct(res.data.data);
       } catch (error) {
-        console.error('Failed to fetch product', error);
+        console.error('Failed to fetch product, trying mock data', error);
+        const mockProduct = MOCK_PRODUCTS.find(p => p.slug === slug);
+        setProduct(mockProduct || null);
       } finally {
         setLoading(false);
       }
@@ -56,16 +59,21 @@ export default function ProductPage() {
         {/* Images */}
         <div className="w-full lg:w-1/2 flex gap-4">
           <div className="flex flex-col gap-4 w-20 shrink-0">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square bg-gray-100 rounded-xl cursor-pointer border-2 border-transparent hover:border-primary transition-colors flex items-center justify-center overflow-hidden">
-                 <img 
-                   src={`https://loremflickr.com/100/100/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1) + i}`}
-                   alt={`Thumbnail ${i}`} 
-                   loading="lazy"
-                   className="w-full h-full object-cover" 
-                 />
-              </div>
-            ))}
+            {[1, 2, 3, 4].map((i) => {
+              const thumbnailSrc = (product.images && product.images[i-1]) 
+                ? product.images[i-1].url 
+                : (product.image ? `${product.image}&sig=${i}` : `https://loremflickr.com/100/100/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1) + i}`);
+              return (
+                <div key={i} className="aspect-square bg-gray-100 rounded-xl cursor-pointer border-2 border-transparent hover:border-primary transition-colors flex items-center justify-center overflow-hidden">
+                   <img 
+                     src={thumbnailSrc}
+                     alt={`Thumbnail ${i}`} 
+                     loading="lazy"
+                     className="w-full h-full object-cover" 
+                   />
+                </div>
+              );
+            })}
           </div>
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -73,7 +81,7 @@ export default function ProductPage() {
             className="flex-1 bg-gray-100 rounded-3xl aspect-square flex items-center justify-center relative overflow-hidden"
           >
              <img 
-               src={`https://loremflickr.com/800/800/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
+               src={product.image || product.images?.[0]?.url || `https://loremflickr.com/800/800/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
                alt={product.name} 
                loading="lazy"
                className="absolute inset-0 w-full h-full object-cover" 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Filter, ChevronDown, Grid, List as ListIcon } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { cartActions } from '../redux/cartSlice';
+import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '../utils/mockData';
 
 export default function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,9 +24,10 @@ export default function ShopPage() {
     const fetchCategories = async () => {
       try {
         const res = await axios.get('http://localhost:5001/api/products/categories/all');
-        setCategories(res.data.data);
+        setCategories(res.data.data || MOCK_CATEGORIES);
       } catch (error) {
-        console.error('Failed to fetch categories', error);
+        console.error('Failed to fetch categories, using mock data', error);
+        setCategories(MOCK_CATEGORIES);
       }
     };
     fetchCategories();
@@ -41,9 +43,23 @@ export default function ShopPage() {
         if (currentSearch) url += `&search=${currentSearch}`;
         
         const res = await axios.get(url);
-        setProducts(res.data.data);
+        setProducts(res.data.data || MOCK_PRODUCTS);
       } catch (error) {
-        console.error('Failed to fetch products', error);
+        console.error('Failed to fetch products, using mock data with client filtering', error);
+        let filtered = [...MOCK_PRODUCTS];
+        if (currentCategory) {
+          filtered = filtered.filter(p => p.category?.slug === currentCategory);
+        }
+        if (currentSearch) {
+          const searchLower = currentSearch.toLowerCase();
+          filtered = filtered.filter(p => p.name.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower));
+        }
+        if (currentSort === 'price_asc') {
+          filtered.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+        } else if (currentSort === 'price_desc') {
+          filtered.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+        }
+        setProducts(filtered);
       } finally {
         setLoading(false);
       }
@@ -155,7 +171,7 @@ export default function ShopPage() {
                 
                 <Link to={`/product/${product.slug}`} className={`block relative overflow-hidden rounded-xl bg-gray-50 ${view === 'list' ? 'w-48 h-48 shrink-0' : 'aspect-square mb-4'}`}>
                   <img 
-                    src={`https://loremflickr.com/400/400/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
+                    src={product.image || product.images?.[0]?.url || `https://loremflickr.com/400/400/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
                     alt={product.name} 
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

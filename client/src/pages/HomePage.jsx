@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronRight } from 'lucide-react';
+import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '../utils/mockData';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
@@ -15,10 +16,12 @@ export default function HomePage() {
           axios.get('http://localhost:5001/api/products/categories/all'),
           axios.get('http://localhost:5001/api/products?limit=8&sort=price_desc')
         ]);
-        setCategories(catRes.data.data);
-        setTrending(prodRes.data.data);
+        setCategories(catRes.data.data || MOCK_CATEGORIES);
+        setTrending(prodRes.data.data || MOCK_PRODUCTS);
       } catch (error) {
-        console.error('Error fetching home data', error);
+        console.error('Error fetching home data, falling back to mock data', error);
+        setCategories(MOCK_CATEGORIES);
+        setTrending(MOCK_PRODUCTS);
       }
     };
     fetchData();
@@ -108,7 +111,7 @@ export default function HomePage() {
               )}
               <Link to={`/product/${product.slug}`} className="block relative aspect-square mb-4 overflow-hidden rounded-xl bg-gray-50">
                 <img 
-                  src={`https://loremflickr.com/400/400/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
+                  src={product.image || product.images?.[0]?.url || `https://loremflickr.com/400/400/${encodeURIComponent(product.name.split(' ').pop())}?lock=${product.id.charCodeAt(0) + product.id.charCodeAt(1)}`}
                   alt={product.name} 
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
